@@ -10,7 +10,7 @@
 header{text-align:center;padding:22px 12px 12px}h1{font-weight:400;font-size:clamp(25px,4vw,38px);margin:0 0 6px}header p{margin:0;color:var(--muted);font-size:14px}
 main{max-width:1160px;margin:auto;padding:0 12px}.stage{height:min(76vh,800px);min-height:390px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#e9e6e1;border-radius:4px;position:relative}
 #book{margin:auto}.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font:15px system-ui;pointer-events:none}.loading.hidden{display:none}
-.controls{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:14px 0;font:14px system-ui,sans-serif}button{cursor:pointer;border:1px solid var(--line);background:white;border-radius:6px;padding:9px 14px;color:var(--ink)}button:hover{background:#eeeae4}button:disabled{opacity:.4;cursor:default}#counter{min-width:100px;text-align:center;color:var(--muted)}.actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:0 0 20px;font:13px system-ui,sans-serif}a{color:#304a68}footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 12px 20px}
+.controls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:14px 0;font:14px system-ui,sans-serif}button{cursor:pointer;border:1px solid var(--line);background:white;border-radius:6px;padding:9px 14px;color:var(--ink)}button:hover{background:#eeeae4}button:disabled{opacity:.4;cursor:default}#counter{min-width:150px;text-align:center;color:var(--muted)}.actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:0 0 20px;font:13px system-ui,sans-serif}a{color:#304a68}footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 12px 20px}
 @media(max-width:650px){.stage{height:73vh;min-height:350px}.controls{gap:9px}header{padding-top:16px}}
 </style>
 </head>
@@ -33,12 +33,31 @@ const flip=new St.PageFlip(document.getElementById('book'),{
  showCover:true,drawShadow:true,maxShadowOpacity:.3,mobileScrollSupport:false,usePortrait:true,
  flippingTime:750,autoSize:true,startPage:0
 });
-flip.on('flip',e=>update(e.data));
-flip.on('init',e=>{loading.classList.add('hidden');update(e.data.page||0)});
+// Update the counter when a page turns or the layout changes.
+flip.on('flip', () => update());
+flip.on('changeOrientation', () => update());
+flip.on('init', () => { loading.classList.add('hidden'); update(); });
 flip.loadFromImages(images);
-function update(page){document.getElementById('counter').textContent=`Page ${page+1} of ${total}`;
- document.getElementById('first').disabled=page===0;document.getElementById('prev').disabled=page===0;
- document.getElementById('next').disabled=page>=total-1;document.getElementById('last').disabled=page>=total-1;}
+function update(){
+ const page = flip.getCurrentPageIndex(); // zero-based
+ const portrait = flip.getOrientation() === 'portrait';
+ let label;
+ if (portrait || page === 0) {
+   label = `Page ${page + 1} of ${total}`;
+ } else {
+   // With showCover:true, the first inside spread is pages 2–3.
+   const first = page % 2 === 0 ? page : page + 1;
+   const last = Math.min(first + 1, total);
+   label = first === last ? `Page ${first} of ${total}` : `Pages ${first}–${last} of ${total}`;
+ }
+ document.getElementById('counter').textContent = label;
+ const atStart = page === 0;
+ const atEnd = page >= total - 1 || (!portrait && page >= total - 2);
+ document.getElementById('first').disabled = atStart;
+ document.getElementById('prev').disabled = atStart;
+ document.getElementById('next').disabled = atEnd;
+ document.getElementById('last').disabled = atEnd;
+}
 document.getElementById('first').onclick=()=>flip.turnToPage(0);
 document.getElementById('prev').onclick=()=>flip.flipPrev();
 document.getElementById('next').onclick=()=>flip.flipNext();
