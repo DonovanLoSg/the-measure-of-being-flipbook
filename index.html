@@ -9,12 +9,7 @@
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif}
 header{text-align:center;padding:22px 12px 12px}h1{font-weight:400;font-size:clamp(25px,4vw,38px);margin:0 0 6px}header p{margin:0;color:var(--muted);font-size:14px}
 main{max-width:1160px;margin:auto;padding:0 12px}.stage{height:min(76vh,800px);min-height:390px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#e9e6e1;border-radius:4px;position:relative}
-#book{margin:auto}
-/* In landscape mode the library reserves a two-page canvas for the cover.
-   Shift that canvas left by half a page so the visible right-hand cover is centred. */
-/* Centre the visible cover and mask the unused left-hand page. */
-.stage.cover-centred .stf__parent{transform:translateX(-25%)}
-.stage.cover-centred::after{content:"";position:absolute;z-index:3;left:0;top:0;bottom:0;width:var(--cover-mask-width,0px);background:#e9e6e1;pointer-events:none}.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font:15px system-ui;pointer-events:none}.loading.hidden{display:none}
+#book{margin:auto}.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font:15px system-ui;pointer-events:none}.loading.hidden{display:none}
 .controls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:14px 0;font:14px system-ui,sans-serif}button{cursor:pointer;border:1px solid var(--line);background:white;border-radius:6px;padding:9px 14px;color:var(--ink)}button:hover{background:#eeeae4}button:disabled{opacity:.4;cursor:default}#counter{min-width:150px;text-align:center;color:var(--muted)}.actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:0 0 20px;font:13px system-ui,sans-serif}a{color:#304a68}footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 12px 20px}
 @media(max-width:650px){.stage{height:73vh;min-height:350px}.controls{gap:9px}header{padding-top:16px}}
 </style>
@@ -23,14 +18,17 @@ main{max-width:1160px;margin:auto;padding:0 12px}.stage{height:min(76vh,800px);m
 <header><h1>The Measure of Being</h1><p>Reflections on Reality, Choice, and Becoming</p></header>
 <main>
 <section class="stage" aria-label="Book preview viewer"><div id="book"></div><div class="loading" id="loading">Preparing your preview…</div></section>
-<nav class="controls" aria-label="Flipbook controls"><button id="first" aria-label="First page">⇤ First</button><button id="prev" aria-label="Previous page">← Previous</button><span id="counter">Page 1 of 57</span><button id="next" aria-label="Next page">Next →</button><button id="last" aria-label="Last page">Last ⇥</button></nav>
+<nav class="controls" aria-label="Flipbook controls"><button id="first" aria-label="First page">⇤ First</button><button id="prev" aria-label="Previous page">← Previous</button><span id="counter">Page 1 of 58</span><button id="next" aria-label="Next page">Next →</button><button id="last" aria-label="Last page">Last ⇥</button></nav>
 <div class="actions"><a href="https://measure.donovanlo.sg" target="_blank" rel="noopener">Get the complete book ↗</a></div>
 </main><footer>© 2026 Donovan Lo · LUCID Methods</footer>
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 <script>
 (function(){
-const total=57;
-const images=Array.from({length:total},(_,i)=>`pages/page-${String(i+1).padStart(2,'0')}.jpg`);
+const originalPages=57;
+const total=originalPages+1;
+const images=Array.from({length:originalPages},(_,i)=>`pages/page-${String(i+1).padStart(2,'0')}.jpg`);
+// Insert a blank sheet after the front cover; existing image filenames stay unchanged.
+images.splice(1,0,'pages/page-blank.jpg');
 const loading=document.getElementById('loading');
 if(!window.St || !St.PageFlip){loading.textContent='The page-turning library could not load. Please check your internet connection.';return;}
 const flip=new St.PageFlip(document.getElementById('book'),{
@@ -41,29 +39,11 @@ const flip=new St.PageFlip(document.getElementById('book'),{
 // Update the counter when a page turns or the layout changes.
 flip.on('flip', () => update());
 flip.on('changeOrientation', () => update());
-window.addEventListener('resize', () => update());
 flip.on('init', () => { loading.classList.add('hidden'); update(); });
 flip.loadFromImages(images);
 function update(){
  const page = flip.getCurrentPageIndex(); // zero-based
  const portrait = flip.getOrientation() === 'portrait';
- const stage = document.querySelector('.stage');
- const cover = page === 0 && !portrait;
- stage.classList.toggle('cover-centred', cover);
- // The canvas is twice the width of a page. Its translated right-hand
- // half contains the cover; mask the empty left half without hiding the cover.
- if (cover) {
-   requestAnimationFrame(() => {
-     const parent = stage.querySelector('.stf__parent');
-     if (!parent || !stage.classList.contains('cover-centred')) return;
-     const rect = parent.getBoundingClientRect();
-     const stageRect = stage.getBoundingClientRect();
-     const coverLeft = rect.left + rect.width / 2 - stageRect.left;
-     stage.style.setProperty('--cover-mask-width', `${Math.max(0, coverLeft)}px`);
-   });
- } else {
-   stage.style.removeProperty('--cover-mask-width');
- }
  let label;
  if (portrait || page === 0) {
    label = `Page ${page + 1} of ${total}`;
