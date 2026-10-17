@@ -9,7 +9,10 @@
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif}
 header{text-align:center;padding:22px 12px 12px}h1{font-weight:400;font-size:clamp(25px,4vw,38px);margin:0 0 6px}header p{margin:0;color:var(--muted);font-size:14px}
 main{max-width:1160px;margin:auto;padding:0 12px}.stage{height:min(76vh,800px);min-height:390px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#e9e6e1;border-radius:4px;position:relative}
-#book{margin:auto}.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font:15px system-ui;pointer-events:none}.loading.hidden{display:none}
+#book{margin:auto}
+/* In landscape mode the library reserves a two-page canvas for the cover.
+   Shift that canvas left by half a page so the visible right-hand cover is centred. */
+.stage.cover-centred .stf__parent{transform:translateX(-25%)}.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font:15px system-ui;pointer-events:none}.loading.hidden{display:none}
 .controls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:14px 0;font:14px system-ui,sans-serif}button{cursor:pointer;border:1px solid var(--line);background:white;border-radius:6px;padding:9px 14px;color:var(--ink)}button:hover{background:#eeeae4}button:disabled{opacity:.4;cursor:default}#counter{min-width:150px;text-align:center;color:var(--muted)}.actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:0 0 20px;font:13px system-ui,sans-serif}a{color:#304a68}footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 12px 20px}
 @media(max-width:650px){.stage{height:73vh;min-height:350px}.controls{gap:9px}header{padding-top:16px}}
 </style>
@@ -41,6 +44,7 @@ flip.loadFromImages(images);
 function update(){
  const page = flip.getCurrentPageIndex(); // zero-based
  const portrait = flip.getOrientation() === 'portrait';
+ document.querySelector('.stage').classList.toggle('cover-centred', page === 0 && !portrait);
  let label;
  if (portrait || page === 0) {
    label = `Page ${page + 1} of ${total}`;
